@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prueba QR</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    #reader {
+      width: 300px;
+      margin: 20px auto;
+      display: none;
+    }
+    #result {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center">Escáner QR de Prueba</h1>
+  <div style="text-align:center">
+    <button onclick="scanCode()">Escanear código</button>
+    <div id="reader"></div>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    let scanner = null;
+
+    function scanCode() {
+      if (!scanner) {
+        scanner = new Html5Qrcode("reader");
+      }
+
+      document.getElementById("reader").style.display = "block";
+      document.getElementById("result").innerText = "";
+
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          document.getElementById("result").innerText = "Código escaneado: " + decodedText;
+          scanner.stop().then(() => {
+            document.getElementById("reader").style.display = "none";
+          });
+        },
+        (errorMessage) => {
+          console.warn("Intento fallido:", errorMessage);
+        }
+      ).catch((err) => {
+        console.error("No se pudo iniciar el escaneo:", err);
+      });
+    }
+  </script>
+</body>
+</html>
