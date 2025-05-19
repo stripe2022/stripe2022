@@ -26,7 +26,7 @@
     }
 
     #result {
-      position: absolute;
+      position: fixed;
       top: 20px;
       left: 0;
       right: 0;
@@ -36,11 +36,10 @@
     }
 
     #startBtn {
-      position: absolute;
+      position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      z-index: 1002;
       font-size: 18px;
       padding: 12px 24px;
       border: none;
@@ -48,6 +47,7 @@
       background-color: #28a745;
       color: white;
       cursor: pointer;
+      z-index: 1002;
     }
 
     #startBtn:hover {
@@ -56,4 +56,56 @@
   </style>
 </head>
 <body>
-  <button id="startBtn" onclick
+  <button id="startBtn" onclick="scanCode()">📷 Escanear código</button>
+  <div id="reader"></div>
+  <div id="result"></div>
+
+  <script>
+    let scanner = null;
+
+    function scanCode() {
+      const reader = document.getElementById("reader");
+      const startBtn = document.getElementById("startBtn");
+      const resultEl = document.getElementById("result");
+
+      reader.style.display = "block";
+      startBtn.style.display = "none";
+      resultEl.innerText = "";
+
+      const config = {
+        fps: 10,
+        qrbox: 250, // Tamaño recomendado por la librería
+        videoConstraints: {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
+      if (!scanner) {
+        scanner = new Html5Qrcode("reader");
+      }
+
+      scanner.start(
+        config.videoConstraints,
+        config,
+        (decodedText) => {
+          resultEl.innerText = "✅ Código escaneado: " + decodedText;
+          scanner.stop().then(() => {
+            reader.style.display = "none";
+            startBtn.style.display = "block";
+          });
+        },
+        (errorMessage) => {
+          console.warn("Error escaneando:", errorMessage);
+        }
+      ).catch((err) => {
+        console.error("No se pudo iniciar el escaneo:", err);
+        alert("No se pudo acceder a la cámara. Verifica los permisos.");
+        reader.style.display = "none";
+        startBtn.style.display = "block";
+      });
+    }
+  </script>
+</body>
+</html>
