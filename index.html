@@ -43,36 +43,35 @@
     async function iniciarEscaneo() {
       try {
         const devices = await codeReader.listVideoInputDevices();
+        const backCamera = devices.find(d => d.label.toLowerCase().includes('back')) || devices[0];
 
-        const backCamera = devices.find(device =>
-          device.label.toLowerCase().includes("back")
-        ) || devices[0];
-
-        // Restringe tipos para mejorar precisión
-        const formats = [
+        // Establecer los formatos que quieres escanear
+        const formatos = [
           ZXing.BarcodeFormat.QR_CODE,
           ZXing.BarcodeFormat.CODE_128,
+          ZXing.BarcodeFormat.CODE_39,
           ZXing.BarcodeFormat.EAN_13,
           ZXing.BarcodeFormat.EAN_8,
-          ZXing.BarcodeFormat.UPC_A
+          ZXing.BarcodeFormat.UPC_A,
+          ZXing.BarcodeFormat.UPC_E,
+          ZXing.BarcodeFormat.ITF,
         ];
 
-        codeReader.hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+        codeReader.hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formatos);
 
-        await codeReader.decodeFromVideoDevice(
-          backCamera.deviceId,
-          videoElement,
-          (result, err) => {
-            if (result) {
-              resultElement.innerText = `✅ ${result.getBarcodeFormat()}: ${result.getText()}`;
-            } else if (err && !(err instanceof ZXing.NotFoundException)) {
-              console.error(err);
-              resultElement.innerText = "❌ Error en escaneo";
-            }
+        await codeReader.decodeFromVideoDevice(backCamera.deviceId, videoElement, (result, err) => {
+          if (result) {
+            const format = result.getBarcodeFormat();
+            const text = result.getText();
+            console.log("Detectado:", format, text);
+            resultElement.innerText = `✅ ${format}: ${text}`;
+          } else if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.warn("Error escaneando:", err);
+            resultElement.innerText = "❌ Error durante escaneo";
           }
-        );
+        });
       } catch (e) {
-        console.error(e);
+        console.error("Error accediendo a la cámara:", e);
         resultElement.innerText = "🚫 No se pudo acceder a la cámara";
       }
     }
