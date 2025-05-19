@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Escáner QR Fullscreen</title>
+  <title>Escáner QR Horizontal</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     html, body {
@@ -27,7 +27,7 @@
 
     #result {
       position: absolute;
-      top: 20px;
+      top: 10px;
       left: 0;
       right: 0;
       text-align: center;
@@ -49,10 +49,6 @@
       color: white;
       cursor: pointer;
     }
-
-    #startBtn:hover {
-      background-color: #218838;
-    }
   </style>
 </head>
 <body>
@@ -68,14 +64,13 @@
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("result").innerText = "";
 
-      // Usa facingMode para seleccionar la cámara trasera
       const config = {
-        fps: 15,
-        qrbox: { width: 300, height: 300 },
+        fps: 10,
+        qrbox: { width: 400, height: 150 }, // Caja horizontal
         videoConstraints: {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: { exact: "environment" }, // Cámara trasera
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       };
 
@@ -94,6 +89,7 @@
           });
         },
         (errorMessage) => {
+          // Puedes ocultar esto si quieres
           console.warn("Intento fallido:", errorMessage);
         }
       ).catch((err) => {
