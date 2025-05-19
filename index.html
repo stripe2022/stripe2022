@@ -10,6 +10,9 @@
       padding: 0;
       height: 100%;
       overflow: hidden;
+      font-family: sans-serif;
+      background-color: black;
+      color: white;
     }
 
     #reader {
@@ -18,16 +21,15 @@
       position: fixed;
       top: 0;
       left: 0;
+      display: none;
       z-index: 1000;
-      background-color: black;
     }
 
     #result {
       position: absolute;
-      top: 10px;
+      top: 20px;
       left: 0;
       right: 0;
-      color: white;
       text-align: center;
       font-size: 20px;
       z-index: 1001;
@@ -35,17 +37,27 @@
 
     #startBtn {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       z-index: 1002;
-      font-size: 16px;
-      padding: 10px 20px;
+      font-size: 18px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
+    #startBtn:hover {
+      background-color: #218838;
     }
   </style>
 </head>
 <body>
-  <button id="startBtn" onclick="scanCode()">Escanear código</button>
-  <div id="reader" style="display: none;"></div>
+  <button id="startBtn" onclick="scanCode()">📷 Escanear código</button>
+  <div id="reader"></div>
   <div id="result"></div>
 
   <script>
@@ -56,40 +68,39 @@
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("result").innerText = "";
 
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          const cameraId = devices[0].id;
-
-          if (!scanner) {
-            scanner = new Html5Qrcode("reader");
-          }
-
-          scanner.start(
-            cameraId,
-            {
-              fps: 15, // Mayor velocidad de escaneo
-              qrbox: { width: 300, height: 300 }, // Puedes eliminar esto para usar todo el marco
-              videoConstraints: {
-                width: { ideal: 1920 }, // Mayor resolución para mejorar precisión
-                height: { ideal: 1080 }
-              }
-            },
-            (decodedText) => {
-              document.getElementById("result").innerText = "Código escaneado: " + decodedText;
-              scanner.stop().then(() => {
-                document.getElementById("reader").style.display = "none";
-                document.getElementById("startBtn").style.display = "block";
-              });
-            },
-            (errorMessage) => {
-              console.warn("Intento fallido:", errorMessage);
-            }
-          );
-        } else {
-          alert("No se encontraron cámaras disponibles.");
+      // Usa facingMode para seleccionar la cámara trasera
+      const config = {
+        fps: 15,
+        qrbox: { width: 300, height: 300 },
+        videoConstraints: {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
         }
-      }).catch(err => {
-        console.error("Error al obtener cámaras:", err);
+      };
+
+      if (!scanner) {
+        scanner = new Html5Qrcode("reader");
+      }
+
+      scanner.start(
+        config.videoConstraints,
+        config,
+        (decodedText) => {
+          document.getElementById("result").innerText = "✅ Código escaneado: " + decodedText;
+          scanner.stop().then(() => {
+            document.getElementById("reader").style.display = "none";
+            document.getElementById("startBtn").style.display = "block";
+          });
+        },
+        (errorMessage) => {
+          console.warn("Intento fallido:", errorMessage);
+        }
+      ).catch((err) => {
+        console.error("No se pudo iniciar el escaneo:", err);
+        alert("Error iniciando la cámara. Asegúrate de permitir el acceso.");
+        document.getElementById("reader").style.display = "none";
+        document.getElementById("startBtn").style.display = "block";
       });
     }
   </script>
