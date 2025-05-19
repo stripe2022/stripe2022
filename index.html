@@ -2,97 +2,60 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Escáner QR con jsQR</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <title>Escáner QR y de Barras - ZXing</title>
+  <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
   <style>
-    body, html {
+    body {
       margin: 0;
-      padding: 0;
-      overflow: hidden;
+      font-family: sans-serif;
       background: black;
+      color: white;
+      text-align: center;
     }
-
-    video {
-      position: absolute;
-      top: 0;
-      left: 0;
+    #video {
       width: 100vw;
       height: 100vh;
       object-fit: cover;
     }
-
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
     #result {
-      position: absolute;
+      position: fixed;
       bottom: 20px;
+      left: 0;
       width: 100%;
-      text-align: center;
-      font-size: 20px;
-      color: lime;
+      font-size: 1.4rem;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
     }
   </style>
 </head>
 <body>
-  <video id="video" autoplay></video>
-  <canvas id="overlay"></canvas>
-  <div id="result">Escaneando...</div>
+  <video id="video" autoplay muted playsinline></video>
+  <div id="result">📷 Escaneando...</div>
 
   <script>
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("overlay");
-    const context = canvas.getContext("2d");
-    const result = document.getElementById("result");
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const videoElement = document.getElementById('video');
+    const resultElement = document.getElementById('result');
 
-    navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment",
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      }
-    }).then(stream => {
-      video.srcObject = stream;
-      video.setAttribute("playsinline", true);
-      video.play();
-      requestAnimationFrame(tick);
-    });
+    codeReader
+      .listVideoInputDevices()
+      .then(videoInputDevices => {
+        // Usa la primera cámara trasera disponible
+        const backCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('back')) || videoInputDevices[0];
 
-    function tick() {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height, {
-          inversionAttempts: "dontInvert",
+        return codeReader.decodeFromVideoDevice(backCamera.deviceId, videoElement, (result, err) => {
+          if (result) {
+            resultElement.innerText = `✅ Código detectado: ${result.getText()}`;
+          } else if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.error(err);
+            resultElement.innerText = '❌ Error en escaneo';
+          }
         });
-
-        if (code) {
-          drawLine(code.location.topLeftCorner, code.location.topRightCorner, "red");
-          drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "red");
-          drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "red");
-          drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "red");
-          result.innerText = `✅ Código detectado: ${code.data}`;
-        } else {
-          result.innerText = "Escaneando...";
-        }
-      }
-      requestAnimationFrame(tick);
-    }
-
-    function drawLine(begin, end, color) {
-      context.beginPath();
-      context.moveTo(begin.x, begin.y);
-      context.lineTo(end.x, end.y);
-      context.lineWidth = 4;
-      context.strokeStyle = color;
-      context.stroke();
-    }
+      })
+      .catch(err => {
+        console.error(err);
+        resultElement.innerText = '🚫 No se pudo acceder a la cámara';
+      });
   </script>
 </body>
 </html>
