@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Escáner QR Vertical</title>
+  <title>Escáner QR Optimizado</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     html, body {
@@ -56,52 +56,4 @@
   </style>
 </head>
 <body>
-  <button id="startBtn" onclick="scanCode()">📷 Escanear código</button>
-  <div id="reader"></div>
-  <div id="result"></div>
-
-  <script>
-    let scanner = null;
-
-    function scanCode() {
-      document.getElementById("reader").style.display = "block";
-      document.getElementById("startBtn").style.display = "none";
-      document.getElementById("result").innerText = "";
-
-      const config = {
-        fps: 10,
-        qrbox: { width: 500, height: 900 }, // <<== VERTICAL: 900px de alto
-        videoConstraints: {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 1920 }
-        }
-      };
-
-      if (!scanner) {
-        scanner = new Html5Qrcode("reader");
-      }
-
-      scanner.start(
-        config.videoConstraints,
-        config,
-        (decodedText) => {
-          document.getElementById("result").innerText = "✅ Código escaneado: " + decodedText;
-          scanner.stop().then(() => {
-            document.getElementById("reader").style.display = "none";
-            document.getElementById("startBtn").style.display = "block";
-          });
-        },
-        (errorMessage) => {
-          console.warn("Intento fallido:", errorMessage);
-        }
-      ).catch((err) => {
-        console.error("No se pudo iniciar el escaneo:", err);
-        alert("Error iniciando la cámara.");
-        document.getElementById("reader").style.display = "none";
-        document.getElementById("startBtn").style.display = "block";
-      });
-    }
-  </script>
-</body>
-</html>
+  <button id="startBtn" onclick
