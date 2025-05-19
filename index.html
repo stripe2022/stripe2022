@@ -2,54 +2,94 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Prueba QR</title>
+  <title>Escáner QR Fullscreen</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
-    #reader {
-      width: 300px;
-      margin: 20px auto;
-      display: none;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
     }
+
+    #reader {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      background-color: black;
+    }
+
     #result {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      color: white;
       text-align: center;
-      font-size: 18px;
-      margin-top: 10px;
+      font-size: 20px;
+      z-index: 1001;
+    }
+
+    #startBtn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1002;
+      font-size: 16px;
+      padding: 10px 20px;
     }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center">Escáner QR de Prueba</h1>
-  <div style="text-align:center">
-    <button onclick="scanCode()">Escanear código</button>
-    <div id="reader"></div>
-    <p id="result"></p>
-  </div>
+  <button id="startBtn" onclick="scanCode()">Escanear código</button>
+  <div id="reader" style="display: none;"></div>
+  <div id="result"></div>
 
   <script>
     let scanner = null;
 
     function scanCode() {
-      if (!scanner) {
-        scanner = new Html5Qrcode("reader");
-      }
-
       document.getElementById("reader").style.display = "block";
+      document.getElementById("startBtn").style.display = "none";
       document.getElementById("result").innerText = "";
 
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          document.getElementById("result").innerText = "Código escaneado: " + decodedText;
-          scanner.stop().then(() => {
-            document.getElementById("reader").style.display = "none";
-          });
-        },
-        (errorMessage) => {
-          console.warn("Intento fallido:", errorMessage);
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          const cameraId = devices[0].id;
+
+          if (!scanner) {
+            scanner = new Html5Qrcode("reader");
+          }
+
+          scanner.start(
+            cameraId,
+            {
+              fps: 15, // Mayor velocidad de escaneo
+              qrbox: { width: 300, height: 300 }, // Puedes eliminar esto para usar todo el marco
+              videoConstraints: {
+                width: { ideal: 1920 }, // Mayor resolución para mejorar precisión
+                height: { ideal: 1080 }
+              }
+            },
+            (decodedText) => {
+              document.getElementById("result").innerText = "Código escaneado: " + decodedText;
+              scanner.stop().then(() => {
+                document.getElementById("reader").style.display = "none";
+                document.getElementById("startBtn").style.display = "block";
+              });
+            },
+            (errorMessage) => {
+              console.warn("Intento fallido:", errorMessage);
+            }
+          );
+        } else {
+          alert("No se encontraron cámaras disponibles.");
         }
-      ).catch((err) => {
-        console.error("No se pudo iniciar el escaneo:", err);
+      }).catch(err => {
+        console.error("Error al obtener cámaras:", err);
       });
     }
   </script>
